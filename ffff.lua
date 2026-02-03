@@ -297,50 +297,42 @@ end)
 
 
 
--- [[ 3. Auto Buy ]] --
+-- [[ 3. Auto Buy - Fixed Version ]] --
 
 task.spawn(function()
-
     while task.wait(5) do
-
         if _G.AutoBuyItems then
-
             pcall(function()
-
-                local requests = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UIDataRequests")
-
-                if _G.MinerEnabled then requests.BuyMiner:InvokeServer() end
-
+                -- กำหนด Path ให้ตรงกับที่คุณดักจับมาได้
+                local remotes = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UIDataRequests")
                 local minersFolder = workspace:FindFirstChild("Miners", true)
-
-                if minersFolder then
-
-                    for _, miner in pairs(minersFolder:GetChildren()) do
-
-                        local id = tonumber(miner.Name)
-
-                        if id then
-
-                            requests.BuyClonePickaxe:InvokeServer(_G.SelectedPickaxe, id)
-
-                            task.wait(0.1)
-
-                            requests.BuyCloneBackpack:InvokeServer(_G.SelectedBackpack, id)
-
-                            task.wait(0.1)
-
-                        end
-
-                    end
-
+                
+                -- 1. ซื้อ Miner (ถ้าเปิดใช้งาน)
+                if _G.MinerEnabled then 
+                    remotes:WaitForChild("BuyMiner"):InvokeServer() 
                 end
 
+                -- 2. อัปเกรดไอเทมให้ Miner แต่ละตัว
+                if minersFolder then
+                    for _, miner in pairs(minersFolder:GetChildren()) do
+                        local id = tonumber(miner.Name)
+                        if id then
+                            -- ใช้ WaitForChild เพื่อความชัวร์ว่า Remote พร้อมใช้งาน
+                            if _G.SelectedPickaxe then
+                                remotes:WaitForChild("BuyClonePickaxe"):InvokeServer(_G.SelectedPickaxe, id)
+                                task.wait(0.2) -- เพิ่มดีเลย์เล็กน้อยกัน Server เตะ
+                            end
+                            
+                            if _G.SelectedBackpack then
+                                remotes:WaitForChild("BuyCloneBackpack"):InvokeServer(_G.SelectedBackpack, id)
+                                task.wait(0.2)
+                            end
+                        end
+                    end
+                end
             end)
-
         end
-
     end
-
 end)
 
 
