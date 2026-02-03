@@ -301,16 +301,25 @@ end)
 
 task.spawn(function()
     while task.wait(5) do
-        if _G.AutoBuyItems then
-            pcall(function()
-                -- กำหนด Path ให้ตรงกับที่คุณดักจับมาได้
-                local remotes = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("UIDataRequests")
-                local minersFolder = workspace:FindFirstChild("Miners", true)
-                
-                -- 1. ซื้อ Miner (ถ้าเปิดใช้งาน)
-                if _G.MinerEnabled then 
-                    remotes:WaitForChild("BuyMiner"):InvokeServer() 
-                end
+        -- ตัวแปรกันสแปม
+local lastBuy = 0
+local BUY_COOLDOWN = 10 -- วินาที
+
+local function buyMinerSafe()
+    if not _G.MinerEnabled then return end
+    if tick() - lastBuy < BUY_COOLDOWN then return end
+
+    lastBuy = tick()
+
+    pcall(function()
+        local remotes = game:GetService("ReplicatedStorage")
+            :WaitForChild("Remotes")
+            :WaitForChild("UIDataRequests")
+
+        -- ซื้อคนขุด (Remote ที่ดักได้)
+        remotes:WaitForChild("BuyMiner"):InvokeServer()
+    end)
+end
 
                 -- 2. อัปเกรดไอเทมให้ Miner แต่ละตัว
                 if minersFolder then
